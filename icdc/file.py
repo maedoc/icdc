@@ -12,7 +12,7 @@ except ImportError:
 
 from .qt import QtCore, QtGui
 from .core import Action
-from .fileio import EEGLAB, VHDR, MATFile, NPZFile
+from .fileio import EEGLAB, VHDR, MATFile, NPZFile, EdfFile, FifFile
 
 
 # TODO refactor a settings class to handle this generally
@@ -107,39 +107,48 @@ class CloneWindow(Action):
         self.main.clone_window()
 
 
-class LoadEEGLAB(Action):
+class LoadAction(Action):
+    "Generic load action for various readers."
+    _text = None
+    _filter = None
+    _reader = None
+
+    def run(self, filename=None):
+        filename = filename or find_file(self._filter, parent=self.main)
+        if filename:
+            self.status.emit("reading %s" % (filename,))
+            self.main.dataset.update(self._reader(filename))
+            self.status.emit("done!")    
+
+
+class LoadEEGLAB(LoadAction):
     _text = "Load an EEGLAB dataset (.&set)"
-
-    def run(self, filename=None):
-        filename = filename or find_file("EEGLAB datasets (*.set)", parent=self.main)
-        if filename:
-            self.status.emit("reading %s" % (filename,))
-            self.main.dataset.update(EEGLAB(filename))
-            self.status.emit("done!")
+    _filter = "EEGLAB datasets (*.set)"
+    _reader = EEGLAB
 
 
-class LoadVHDR(Action):
+class LoadVHDR(LoadAction):
     _text = "Load a Brain Vision dataset (.&vhdr)"
-
-    def run(self, filename=None):
-        filename = filename or find_file(
-            "BrainVision headers (*.vhdr)", parent=self.main
-        )
-        if filename:
-            self.status.emit("reading %s" % (filename,))
-            self.main.dataset.update(VHDR(filename))
-            self.status.emit("done!")
+    _filter = "BrainVision headers (*.vhdr)"
+    _reader = VHDR
 
 
-class LoadMATFile(Action):
+class LoadEdf(LoadAction):
+    _text = "Load a EDF dataset (.&edf)"
+    _filter = "EDF files (*.edf)"
+    _reader = EdfFile
+
+
+class LoadFif(LoadAction):
+    _text = "Load a Fif dataset (.&fif)"
+    _filter = "Fif files (*.fif)"
+    _reader = FifFile
+
+
+class LoadMATFile(LoadAction):
     _text = "Load a MATLAB file (.&mat)"
-
-    def run(self, filename=None):
-        filename = filename or find_file(filt="MATLAB file (*.mat)", parent=self.main)
-        if filename:
-            self.status.emit("reading %s" % (filename,))
-            self.main.dataset.update(MATFile(filename))
-            self.status.emit("done!")
+    _filter = "MATLAB file (*.mat)"
+    _reader = MATFile
 
 
 class LoadAWMarkers(Action):
@@ -328,6 +337,8 @@ actions = [
     LoadWorkspace,
     LoadEEGLAB,
     LoadVHDR,
+    LoadEdf,
+    LoadFif,
     LoadMATFile,
     LoadAWMarkers,
     LoadNPZ,

@@ -4,6 +4,7 @@ import configparser
 
 import numpy as np
 from scipy.io import loadmat
+import mne
 
 from .core import Dataset
 
@@ -102,6 +103,31 @@ class NPZFile(Dataset):
         self.nsamp = self.data.shape[1]
         self.nchan = self.data.shape[0]
         self.labels = list(z["labels"])
+
+
+# MNE has a bunch of file readers, MNEReader is a base class,
+
+class MNEReader:
+    def __init__(self, filename):
+        super().__init__(filename)
+        raw = self._read_raw(filename)
+        data, times = raw[:]
+        self.fs = 1.0 / (times[1] - times[0])
+        self.data = data
+        self.nsamp = len(times)
+        self.labels = raw.info['ch_names']
+        self.nchan = len(self.labels)
+
+# then just add a new class per read function 
+# cf https://mne.tools/stable/search.html?q=read_raw to see 
+# the other functions gdf, ctf, bti, etc
+
+class EdfFile(Dataset, MNEReader):
+    _read_raw = mne.io.read_raw_edf
+
+
+class FifFile(Dataset, MNEReader):
+    _read_raw = mne.io.read_raw_fif
 
 
 class MarkersCSV(object):
