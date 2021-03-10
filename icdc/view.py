@@ -11,7 +11,10 @@ from .qt import QtCore, QtGui, qt_core_enum
 from .core import Action
 
 # from .wavedec import WaveView
-from .d3 import MultiXImage
+try:
+    from .d3 import MultiXImage
+except ImportError as exc:
+    print("unable to load OpenGL (%r) but that's ok." % exc)
 from . import atlas
 
 

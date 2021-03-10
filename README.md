@@ -15,3 +15,12 @@ Run IC/DC by double clicking run.bat (Windows), or running `python -m icdc` in t
 
 - docopt for command line parsing
 - mne python
+
+# Conda environment
+
+You can use conda to easily create an environment for using ICDC,
+```
+conda create -n icdc numpy scipy pyqt pyqtgraph pyopengl PyWavelets scikit-learn
+conda activate icdc
+pip install dicom mne
+```
